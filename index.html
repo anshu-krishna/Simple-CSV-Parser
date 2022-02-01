@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>CSV Parser</title>
+	<style>
+		pre {
+			font-family: Consolas, 'Courier New', monospace;
+			white-space: pre-wrap;
+		}
+	</style>
+</head>
+<body>
+	<script type="module">
+		const echoArray1D = function(list, heading = null) {
+			if(!Array.isArray(list)) {
+				return;
+			}
+			const pre = document.createElement('pre');
+			if(heading !== null) {
+				pre.innerHTML = `<strong>${heading}</strong>\n`;
+			}
+			pre.innerHTML += JSON.stringify(list);
+			document.body.appendChild(pre);
+		};
+
+		const echoArray2D = function(list, heading = null) {
+			if(!Array.isArray(list)) {
+				return;
+			}
+			list = list.map(v => JSON.stringify(v));
+			const pre = document.createElement('pre');
+			if(heading !== null) {
+				pre.innerHTML = `<strong>${heading}</strong>\n`;
+			}
+			pre.innerHTML += list.join('\n');
+			document.body.appendChild(pre);
+		};
+
+		import {CSVParser} from './csv-parser.js';
+		try {
+			const sample = await(await fetch('sample-data.csv')).text();
+			let csv = new CSVParser(sample, {
+				header: true,
+				seperator: ',',
+				quote: '"',
+				skipComment: true,
+				mapHeader: v => v.replace(/\s+/, '_') .toUpperCase(),
+				mapValue: v => {
+					if(v === '' || v === 'null') return null;
+					const n = Number(v);
+					return (isNaN(n)) ? v : n;
+				}
+			});
+
+			echoArray1D(csv.header, 'Header');
+			echoArray2D(csv.data, 'Data');
+			echoArray2D(csv.table(), 'Table');
+			echoArray2D(csv.objList(), 'ObjList');
+		} catch (error) {
+			echoArray1D(['CSV Error', error.message], 'ERROR');
+		}
+	</script>
+</body>
+</html>
